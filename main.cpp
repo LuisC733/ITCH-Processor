@@ -1,53 +1,48 @@
 #include <iostream>
 #include <map>
-#include "include/Order.h"
-#include "include/Orderbook.h"
-#include "include/Side.h"
-#include "include/Print.h"
+#include "Parser.h"
+#include "Orderbook.h"
+#include "Reader.h"
 
 int main() {
-    Orderbook book;
-
-    // Erwartung: Trade 5 @ 100, Ask bei 100 hat danach noch 5 übrig, Bids leer
-    book.Add(Order(100, 10, Side::Sell, 1));
-    book.Add(Order(100, 5, Side::Buy, 2));
-    std::cout << "--- Test 1 ---" << std::endl;
-    std::cout << "Asks:";
-    Print(book.asks);
-    std::cout << "Bids:";
-    Print(book.bids);
-    std::cout << "" << std::endl;
-
-    // Erwartung: Trade 5 @ 99, dann Trade 7 @ 100
-    // Asks: [100: 3], Bids: leer, Preisniveau 99 komplett weg
-    Orderbook book2;
-    book2.Add(Order(99, 5, Side::Sell, 1));
-    book2.Add(Order(100, 10, Side::Sell, 2));
-    book2.Add(Order(100, 12, Side::Buy, 3));
-    std::cout << "--- Test 2 ---" << std::endl;
-    std::cout << "Asks:";
-    Print(book2.asks);
-    std::cout << "Bids:";
-    Print(book2.bids);
-    std::cout << "" << std::endl;
-
-    // Erwartung nach Add: Bids [98: 5], Asks [100: 10]
-    // Erwartung nach Cancel: Bids leer (Preisniveau 98 muss weg sein), Asks [100: 10]
-    Orderbook book3;
-    book3.Add(Order(100, 10, Side::Sell, 1));
-    book3.Add(Order(98, 5, Side::Buy, 2));
-    std::cout << "--- Test 3 ---" << std::endl;
-    std::cout << "Asks:";
-    Print(book3.asks);
-    std::cout << "Bids:";
-    Print(book3.bids);
-    std::cout << "" << std::endl;
-    book3.Cancel(2);
-    std::cout << "--- Test 3 ---" << std::endl;
-    std::cout << "Asks:";
-    Print(book3.asks);
-    std::cout << "Bids:";
-    Print(book3.bids);
+    Orderbook orderbook{};
+    const std::vector<uint8_t> src = readFile("assets/20200130.BX_ITCH_50");
+    size_t offset = 0;
+    while (offset < src.size()) {
+        uint16_t dest = {};
+        memcpy(&dest, src.data() + offset, sizeof(dest));
+        uint16_t length = __builtin_bswap16(dest);
+        offset += 2;
+        switch (src[offset]) {
+            case 'A': [[fallthrough]];
+            case 'F':
+                orderbook.AddOrder(parseAddOrder(src, offset));
+                break;
+            case 'D':
+                orderbook.DeleteOrder(parseOrderId(src, offset));
+                break;
+            case 'E':
+                orderbook.OrderExecuted(parseOrderId(src, offset), parseOrderQuantity(src, offset));
+                break;
+            {
+                case 'U':
+                OrderId id = parseOrderId(src, offset);
+                auto const it = orderbook.orders.find(id);
+                if (it == orderbook.orders.end()) {
+                    std::cerr << "Error: Order not found!\n";
+                    break;
+                };
+                const Side side = it->second.side;
+                Order order = parseReplaceOrder(src, offset);
+                order.side = side;
+                orderbook.ReplaceOrder(order, id);
+                break;
+            }
+            default:
+                break;
+        }
+        offset += length;
+    }
 
     return 0;
 }
