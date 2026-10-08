@@ -1,19 +1,10 @@
 #pragma once
-#include "Types.h"
-#include "Side.h"
 #ifndef ORDERBOOK_ORDER_H
 #define ORDERBOOK_ORDER_H
+#include "Types.h"
+#include "Side.h"
 
-class Order {
-public:
-    Order(Price price, Quantity quantity, Side side, OrderId orderId);
-    Price GetPrice() const;
-    Quantity GetQuantity() const;
-    Side GetSide() const;
-    OrderId GetOrderId() const;
-    void SetQuantity(Quantity quantity);
-
-private:
+struct Order {
     Price price;
     Quantity quantity;
     OrderId orderId;

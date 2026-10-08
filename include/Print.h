@@ -1,5 +1,7 @@
 #ifndef ORDERBOOK_PRINT_H
 #define ORDERBOOK_PRINT_H
+#include <iostream>
+#include "Types.h"
 
 template <typename T>
 void Print(T& map) {
@@ -7,7 +9,7 @@ void Print(T& map) {
         std::cout << i.first<< ", ";
         Quantity result = 0;
         for (auto const& order : i.second) {
-            result += order.GetQuantity();
+            result += order.quantity;
         }
         std::cout << result << std::endl;
     }

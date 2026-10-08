@@ -8,21 +8,21 @@
 #include <iostream>
 
 void Orderbook::AddOrder(Order order) {
-    if (order.GetSide() == Side::Buy) {HelperAddOrder(bids, order);}
-    if (order.GetSide() == Side::Sell) {HelperAddOrder(asks, order);}
+    if (order.side == Side::Buy) {HelperAddOrder(bids, order);}
+    if (order.side == Side::Sell) {HelperAddOrder(asks, order);}
 };
 template <typename T>
 void Orderbook::HelperAddOrder(T& map, Order order) {
     Handle handle;
 
-    auto pair = map.insert(std::pair<Price, PriceLevelOrders>(order.GetPrice(), PriceLevelOrders{}));
+    auto pair = map.insert(std::pair<Price, PriceLevelOrders>(order.price, PriceLevelOrders{}));
     auto it = pair.first;
     auto location = it->second.insert(it->second.end(), order);
 
-    handle.price = order.GetPrice();
-    handle.side = order.GetSide();
+    handle.price = order.price;
+    handle.side = order.side;
     handle.location = location;
-    orders.insert(std::pair<OrderId, Handle> (order.GetOrderId(), handle));
+    orders.insert(std::pair<OrderId, Handle> (order.orderId, handle));
 }
 void Orderbook::DeleteOrder(OrderId orderId) {
     auto it = orders.find(orderId);
@@ -53,8 +53,8 @@ void Orderbook::OrderExecuted(OrderId orderId, Quantity quantity) {
         return;
     };
     auto order = it->second.location;
-    order->SetQuantity(order->GetQuantity() - quantity);
-    if (order->GetQuantity() == 0) {
+    order->quantity = order->quantity - quantity;
+    if (order->quantity == 0) {
         DeleteOrder(orderId);
     };
 }
