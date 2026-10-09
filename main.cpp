@@ -21,7 +21,9 @@ int main() {
             case 'D':
                 orderbook.DeleteOrder(parseOrderId(src, offset));
                 break;
-            case 'E':
+            case 'E': [[fallthrough]];
+            case 'C': [[fallthrough]];
+            case 'X':
                 orderbook.OrderExecuted(parseOrderId(src, offset), parseOrderQuantity(src, offset));
                 break;
             {
