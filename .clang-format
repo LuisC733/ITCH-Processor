@@ -1,3 +1,17 @@
 ---
 Language: Cpp
 BasedOnStyle: Google
+# Google's preset puts every <*.h> in the C system group, which would sort
+# <gtest/gtest.h> above the C++ standard headers. Order per the style guide:
+# C system, C++ standard, other libraries, project headers.
+IncludeCategories:
+  - Regex: '^<(gtest|gmock)/'
+    Priority: 3
+  - Regex: '^<ext/.*\.h>'
+    Priority: 2
+  - Regex: '^<.*\.h>'
+    Priority: 1
+  - Regex: '^<.*'
+    Priority: 2
+  - Regex: '.*'
+    Priority: 4

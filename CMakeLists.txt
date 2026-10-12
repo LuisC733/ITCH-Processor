@@ -8,9 +8,17 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
-add_executable(OrderBook main.cc
+add_library(itch_core
         src/feed_handler/feed_handler.cc
         src/orderbook/orderbook.cc
 )
+target_include_directories(itch_core PUBLIC src)
 
-target_include_directories(OrderBook PRIVATE src)
+add_executable(OrderBook main.cc)
+target_link_libraries(OrderBook PRIVATE itch_core)
+
+option(ITCH_BUILD_TESTS "Build the unit tests" ON)
+if(ITCH_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(test)
+endif()
