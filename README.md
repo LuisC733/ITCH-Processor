@@ -17,7 +17,7 @@ cmake --build build
 
 ## Usage
 
-Place a Nasdaq BinaryFILE (ITCH 5.0) at `assets/20200130.BX_ITCH_50` (path is currently hardcoded in `main.cpp`) and run:
+Place a Nasdaq BinaryFILE (ITCH 5.0) at `assets/20200130.BX_ITCH_50` (path is currently hardcoded in `main.cc`) and run:
 
 ```
 ./build/OrderBook
@@ -28,18 +28,18 @@ Sample data files are available from [Nasdaq's FTP server](https://emi.nasdaq.co
 ## Project Structure
 
 ```
-├── main.cpp                 # Framing loop, message dispatch, per-stock routing
+├── main.cc                  # Framing loop, message dispatch, per-stock routing
 ├── include/
-│   ├── Parser.h             # Binary field extraction with endianness conversion
-│   ├── Reader.h             # File-to-buffer loader (binary mode)
-│   ├── Orderbook.h          # Order book interface (symbol, bids, asks)
-│   ├── Order.h              # Order struct (price, quantity, id, side, stock locate)
-│   ├── Handle.h             # O(1) lookup handle (price, side, list iterator, stock locate)
-│   ├── Types.h              # Type aliases (Price, Quantity, OrderId, StockLocate)
-│   ├── Side.h               # Buy/Sell enum
-│   └── Print.h              # Debug output for price levels
+│   ├── parser.h             # Binary field extraction with endianness conversion
+│   ├── reader.h             # File-to-buffer loader (binary mode)
+│   ├── orderbook.h          # Order book interface (symbol, bids, asks)
+│   ├── order.h              # Order struct (price, quantity, id, side, stock locate)
+│   ├── handle.h             # O(1) lookup handle (price, side, list iterator, stock locate)
+│   ├── types.h              # Type aliases (Price, Quantity, OrderId, StockLocate)
+│   ├── side.h               # Buy/Sell enum
+│   └── print.h              # Debug output for price levels
 ├── src/
-│   └── Orderbook.cpp        # Order book operations (add, delete, execute, replace)
+│   └── orderbook.cc         # Order book operations (add, delete, execute, replace)
 └── CMakeLists.txt
 ```
 
@@ -58,8 +58,8 @@ Sample data files are available from [Nasdaq's FTP server](https://emi.nasdaq.co
 ## Data Structures
 
 - **Order books**: `std::vector<Orderbook>` with 65536 slots — indexed by stock locate
-- **Bids**: `std::map<Price, PriceLevelOrders, std::greater<>>` — sorted descending
-- **Asks**: `std::map<Price, PriceLevelOrders, std::less<>>` — sorted ascending
+- **Bids**: `std::map<Price, PriceLevel, std::greater<>>` — sorted descending
+- **Asks**: `std::map<Price, PriceLevel, std::less<>>` — sorted ascending
 - **Order index**: `std::unordered_map<OrderId, Handle>` — shared across all books, O(1) lookup by order ID
 - **Price levels**: `std::list<Order>` — preserves FIFO queue priority
 
