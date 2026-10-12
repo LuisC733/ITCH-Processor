@@ -2,6 +2,7 @@
 #define ITCH_PROCESSOR_FEED_HANDLER_FEED_HANDLER_H_
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <unordered_map>
 #include <vector>
 
@@ -14,7 +15,9 @@ class FeedHandler {
  public:
   FeedHandler();
 
-  void Process(const std::vector<uint8_t>& src);
+  // Processes length-prefixed messages. Can be called repeatedly with
+  // consecutive chunks of a feed as long as no message spans two chunks.
+  void Process(std::span<const uint8_t> src);
   const Orderbook& book(StockLocate stock_locate) const;
   void CheckInvariants() const;
 

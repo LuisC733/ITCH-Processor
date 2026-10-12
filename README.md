@@ -32,6 +32,16 @@ ctest --test-dir build-debug --output-on-failure
 
 Death tests for the invariant checks only expect an abort in Debug builds.
 
+### Integration test
+
+`itch_integration_test` replays the full day from `ITCH_DATA_FILE` (CMake cache variable, defaults to `assets/20200130.BX_ITCH_50`) and compares the books at 9:30, 11:00, 13:00, 15:00, 16:00 and end of file against `test/integration/20200130.BX_ITCH_50.ref`: live orders, active books, a digest of every book's full depth, and the top 5 levels of the 10 most active symbols. The reference comes from `test/integration/reference.py`, an independent reconstruction in Python, so the test checks the implementation rather than recording its output. It is skipped when the data file is missing and takes about a minute in Debug (all invariant checks run) and 8 s in Release.
+
+```
+ctest --test-dir build-debug -L integration     # only the integration test
+ctest --test-dir build-debug -LE integration    # everything else
+python3 test/integration/reference.py <itch_file> <ref_file>   # regenerate (~1 min)
+```
+
 ## Usage
 
 Place a Nasdaq BinaryFILE (ITCH 5.0) at `assets/20200130.BX_ITCH_50` (path is currently hardcoded in `main.cc`) and run:
@@ -65,6 +75,10 @@ Sample data files are available from [Nasdaq's FTP server](https://emi.nasdaq.co
 │   └── reader/
 │       └── reader.h               # File-to-buffer loader (binary mode)
 ├── test/
+│   ├── integration/
+│   │   ├── integration_test.cc    # Full-day replay against the reference
+│   │   ├── reference.py           # Independent book reconstruction in Python
+│   │   └── 20200130.BX_ITCH_50.ref  # Reference snapshots for the sample day
 │   ├── itch_builder.h             # Encodes ITCH messages and framed feeds for tests
 │   ├── book_util.h                # Depth and queue views for assertions
 │   ├── parser_test.cc             # Parser against hand-written spec bytes
@@ -104,7 +118,8 @@ Work in progress. See [roadmap](#roadmap) for planned improvements.
 - [x] ITCH 5.0 binary parser and framing loop
 - [x] Cancel and Executed-with-Price message types
 - [x] Per-stock order books via Stock Directory messages
-- [ ] Full integration test with Nasdaq sample data
+- [x] Full integration test with Nasdaq sample data
+- [ ] Benchmarks of the naive version
 - [ ] Performance profiling and optimization
-- [ ] Benchmarks
+- [ ] Benchmarks after optimization
 - [ ] CI pipeline

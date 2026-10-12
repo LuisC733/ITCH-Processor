@@ -22,7 +22,7 @@ std::size_t CountOrders(const T& map) {
 
 FeedHandler::FeedHandler() : books_(kMaxLocate) {}
 
-void FeedHandler::Process(const std::vector<uint8_t>& src) {
+void FeedHandler::Process(const std::span<const uint8_t> src) {
   size_t offset = 0;
   while (offset + 2 <= src.size()) {
     const uint16_t length = ReadBigEndian<uint16_t>(src.data() + offset);

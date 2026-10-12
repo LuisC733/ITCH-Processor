@@ -17,6 +17,9 @@ target_include_directories(itch_core PUBLIC src)
 add_executable(OrderBook main.cc)
 target_link_libraries(OrderBook PRIVATE itch_core)
 
+set(ITCH_DATA_FILE "${PROJECT_SOURCE_DIR}/assets/20200130.BX_ITCH_50"
+        CACHE FILEPATH "ITCH 5.0 BinaryFILE for the integration test and benchmarks")
+
 option(ITCH_BUILD_TESTS "Build the unit tests" ON)
 if(ITCH_BUILD_TESTS)
     enable_testing()
