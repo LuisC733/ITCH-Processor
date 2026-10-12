@@ -4,9 +4,8 @@ project(ITCH-Processor)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(OrderBook main.cc
-        src/feed_handler.cc
-        src/orderbook.cc
-        include/reader.h
+        src/feed_handler/feed_handler.cc
+        src/orderbook/orderbook.cc
 )
 
-target_include_directories(OrderBook PUBLIC include)
+target_include_directories(OrderBook PRIVATE src)

@@ -1,12 +1,12 @@
-#include "orderbook.h"
+#include "orderbook/orderbook.h"
 
 #include <list>
 #include <map>
 
-#include "handle.h"
-#include "order.h"
-#include "side.h"
-#include "types.h"
+#include "common/side.h"
+#include "common/types.h"
+#include "orderbook/handle.h"
+#include "orderbook/order.h"
 
 PriceLevel::iterator Orderbook::AddOrder(const Order& order) {
   if (order.side == Side::kBuy) {

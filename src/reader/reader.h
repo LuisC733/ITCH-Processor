@@ -1,5 +1,5 @@
-#ifndef ITCH_PROCESSOR_READER_H_
-#define ITCH_PROCESSOR_READER_H_
+#ifndef ITCH_PROCESSOR_READER_READER_H_
+#define ITCH_PROCESSOR_READER_READER_H_
 #include <fstream>
 #include <stdexcept>
 #include <vector>
@@ -27,4 +27,4 @@ inline std::vector<std::uint8_t> ReadFile(const char* path) {
   return data;
 };
 
-#endif  // ITCH_PROCESSOR_READER_H_
+#endif  // ITCH_PROCESSOR_READER_READER_H_

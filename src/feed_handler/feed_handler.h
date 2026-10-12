@@ -1,14 +1,14 @@
-#ifndef ITCH_PROCESSOR_FEED_HANDLER_H_
-#define ITCH_PROCESSOR_FEED_HANDLER_H_
+#ifndef ITCH_PROCESSOR_FEED_HANDLER_FEED_HANDLER_H_
+#define ITCH_PROCESSOR_FEED_HANDLER_FEED_HANDLER_H_
 #include <cstdint>
 #include <optional>
 #include <unordered_map>
 #include <vector>
 
-#include "handle.h"
-#include "order.h"
-#include "orderbook.h"
-#include "types.h"
+#include "common/types.h"
+#include "orderbook/handle.h"
+#include "orderbook/order.h"
+#include "orderbook/orderbook.h"
 
 class FeedHandler {
  public:
@@ -35,4 +35,4 @@ class FeedHandler {
   OrderIndex orders_;
 };
 
-#endif  // ITCH_PROCESSOR_FEED_HANDLER_H_
+#endif  // ITCH_PROCESSOR_FEED_HANDLER_FEED_HANDLER_H_

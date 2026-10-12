@@ -1,8 +1,8 @@
-#ifndef ITCH_PROCESSOR_PRINT_H_
-#define ITCH_PROCESSOR_PRINT_H_
+#ifndef ITCH_PROCESSOR_ORDERBOOK_PRINT_H_
+#define ITCH_PROCESSOR_ORDERBOOK_PRINT_H_
 #include <iostream>
 
-#include "types.h"
+#include "common/types.h"
 
 template <typename T>
 void Print(T& map) {
@@ -16,4 +16,4 @@ void Print(T& map) {
   }
 }
 
-#endif  // ITCH_PROCESSOR_PRINT_H_
+#endif  // ITCH_PROCESSOR_ORDERBOOK_PRINT_H_

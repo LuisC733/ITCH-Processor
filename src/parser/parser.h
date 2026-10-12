@@ -1,5 +1,5 @@
-#ifndef ITCH_PROCESSOR_PARSER_H_
-#define ITCH_PROCESSOR_PARSER_H_
+#ifndef ITCH_PROCESSOR_PARSER_PARSER_H_
+#define ITCH_PROCESSOR_PARSER_PARSER_H_
 #include <bit>
 #include <cstdint>
 #include <cstring>
@@ -7,9 +7,9 @@
 #include <type_traits>
 #include <utility>
 
-#include "order.h"
-#include "side.h"
-#include "types.h"
+#include "common/side.h"
+#include "common/types.h"
+#include "orderbook/order.h"
 
 static_assert(std::endian::native == std::endian::little,
               "ReadBigEndian assumes a little-endian host");
@@ -67,4 +67,4 @@ inline std::pair<StockLocate, std::string> ParseStockDirectory(
   return {stock_locate, stock_name};
 }
 
-#endif  // ITCH_PROCESSOR_PARSER_H_
+#endif  // ITCH_PROCESSOR_PARSER_PARSER_H_

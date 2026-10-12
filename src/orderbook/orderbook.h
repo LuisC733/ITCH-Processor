@@ -1,11 +1,11 @@
-#ifndef ITCH_PROCESSOR_ORDERBOOK_H_
-#define ITCH_PROCESSOR_ORDERBOOK_H_
+#ifndef ITCH_PROCESSOR_ORDERBOOK_ORDERBOOK_H_
+#define ITCH_PROCESSOR_ORDERBOOK_ORDERBOOK_H_
 #include <map>
 #include <string>
 
-#include "handle.h"
-#include "order.h"
-#include "types.h"
+#include "common/types.h"
+#include "orderbook/handle.h"
+#include "orderbook/order.h"
 
 class Orderbook {
  public:
@@ -36,4 +36,4 @@ class Orderbook {
   Asks asks_;
 };
 
-#endif  // ITCH_PROCESSOR_ORDERBOOK_H_
+#endif  // ITCH_PROCESSOR_ORDERBOOK_ORDERBOOK_H_

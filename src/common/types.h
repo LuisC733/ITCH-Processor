@@ -1,5 +1,5 @@
-#ifndef ITCH_PROCESSOR_TYPES_H_
-#define ITCH_PROCESSOR_TYPES_H_
+#ifndef ITCH_PROCESSOR_COMMON_TYPES_H_
+#define ITCH_PROCESSOR_COMMON_TYPES_H_
 #include <cstdint>
 #include <list>
 
@@ -10,4 +10,4 @@ using Quantity = std::uint32_t;
 using OrderId = std::uint64_t;
 using PriceLevel = std::list<Order>;
 
-#endif  // ITCH_PROCESSOR_TYPES_H_
+#endif  // ITCH_PROCESSOR_COMMON_TYPES_H_
