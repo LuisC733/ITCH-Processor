@@ -5,7 +5,7 @@ BasedOnStyle: Google
 # <gtest/gtest.h> above the C++ standard headers. Order per the style guide:
 # C system, C++ standard, other libraries, project headers.
 IncludeCategories:
-  - Regex: '^<(gtest|gmock)/'
+  - Regex: '^<(gtest|gmock|benchmark)/'
     Priority: 3
   - Regex: '^<ext/.*\.h>'
     Priority: 2

@@ -25,3 +25,8 @@ if(ITCH_BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)
 endif()
+
+option(ITCH_BUILD_BENCHMARKS "Build the benchmarks" ON)
+if(ITCH_BUILD_BENCHMARKS)
+    add_subdirectory(bench)
+endif()

@@ -42,6 +42,41 @@ ctest --test-dir build-debug -LE integration    # everything else
 python3 test/integration/reference.py <itch_file> <ref_file>   # regenerate (~1 min)
 ```
 
+## Benchmarks
+
+Google Benchmark, fetched like GoogleTest; `-DITCH_BUILD_BENCHMARKS=OFF` skips it. Only Release numbers are meaningful.
+
+```
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+./build/bench/itch_bench
+```
+
+- `BM_ReplayDay`: full day from `ITCH_DATA_FILE`, handler setup and teardown not timed.
+- `BM_AddDeleteExistingLevel`, `BM_AddDeleteNewLevel`, `BM_ExecutePartial`, `BM_Replace`: one operation type on a book with 1k, 64k or 1M resting orders. Batches rotate over the whole book so large books are not measured from a warm cache.
+
+`bench/baselines/naive-apple-m1.json` holds the numbers for the naive implementation (Apple M1, 5 repetitions). Compare a new run against it with Google Benchmark's compare tool:
+
+```
+./build/bench/itch_bench --benchmark_repetitions=5 --benchmark_out=new.json --benchmark_out_format=json
+python3 build/_deps/benchmark-src/tools/compare.py benchmarks bench/baselines/naive-apple-m1.json new.json
+```
+
+### Results: naive implementation
+
+Apple M1, Release, median of 5 repetitions, time per message:
+
+| Benchmark | 1k orders | 64k orders | 1M orders |
+|-----------|----------:|-----------:|----------:|
+| Add + delete, existing level | 54.2 ns | 60.2 ns | 60.7 ns |
+| Add + delete, new level | 82.9 ns | 89.1 ns | 90.3 ns |
+| Partial execution | 5.1 ns | 7.4 ns | 59.3 ns |
+| Replace | 97.5 ns | 137.5 ns | 297.4 ns |
+
+Full day (`BM_ReplayDay`, ~53M messages): 6.27 s, 117.6 ns per message (~8.5M messages/s).
+
+Execution and replace slow down with book size because each message looks up a random order: in large books the `std::unordered_map` and `std::list` nodes no longer fit in cache.
+
 ## Usage
 
 Place a Nasdaq BinaryFILE (ITCH 5.0) at `assets/20200130.BX_ITCH_50` (path is currently hardcoded in `main.cc`) and run:
@@ -74,6 +109,11 @@ Sample data files are available from [Nasdaq's FTP server](https://emi.nasdaq.co
 │   │   └── parser.h               # ITCH message decoding with endianness conversion
 │   └── reader/
 │       └── reader.h               # File-to-buffer loader (binary mode)
+├── bench/
+│   ├── feed_handler_bench.cc      # Full-day replay
+│   ├── operations_bench.cc        # Add/delete, execute, replace by book size
+│   ├── bench_util.h               # Throughput and time-per-message counters
+│   └── baselines/                 # Recorded results (naive implementation)
 ├── test/
 │   ├── integration/
 │   │   ├── integration_test.cc    # Full-day replay against the reference
@@ -119,7 +159,7 @@ Work in progress. See [roadmap](#roadmap) for planned improvements.
 - [x] Cancel and Executed-with-Price message types
 - [x] Per-stock order books via Stock Directory messages
 - [x] Full integration test with Nasdaq sample data
-- [ ] Benchmarks of the naive version
+- [x] Benchmarks of the naive version
 - [ ] Performance profiling and optimization
 - [ ] Benchmarks after optimization
 - [ ] CI pipeline
