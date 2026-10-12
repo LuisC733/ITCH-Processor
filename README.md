@@ -1,10 +1,10 @@
 # ITCH-Processor
 
-A C++ ITCH 5.0 feed handler that reconstructs a limit order book from raw Nasdaq BinaryFILE data.
+A C++ ITCH 5.0 feed handler that reconstructs per-stock limit order books from raw Nasdaq BinaryFILE data.
 
 ## Overview
 
-Parses binary ITCH 5.0 messages from Nasdaq historical data files and maintains a live order book. The order book tracks price levels with sorted bids and asks, supports O(1) order lookup via handles, and processes Add, Delete, Execute, and Replace messages.
+Parses binary ITCH 5.0 messages from Nasdaq historical data files and maintains one live order book per stock. Books are created from Stock Directory messages and indexed by stock locate. Each book tracks price levels with sorted bids and asks; a shared order index provides O(1) lookup via handles and routes Delete, Execute, Cancel, and Replace messages to the right book.
 
 ## Building
 
@@ -17,7 +17,7 @@ cmake --build build
 
 ## Usage
 
-Place a Nasdaq BinaryFILE (ITCH 5.0) in `assets/` and run:
+Place a Nasdaq BinaryFILE (ITCH 5.0) at `assets/20200130.BX_ITCH_50` (path is currently hardcoded in `main.cpp`) and run:
 
 ```
 ./build/OrderBook
@@ -28,14 +28,14 @@ Sample data files are available from [Nasdaq's FTP server](https://emi.nasdaq.co
 ## Project Structure
 
 ```
-├── main.cpp                 # Framing loop and message dispatch
+├── main.cpp                 # Framing loop, message dispatch, per-stock routing
 ├── include/
 │   ├── Parser.h             # Binary field extraction with endianness conversion
 │   ├── Reader.h             # File-to-buffer loader (binary mode)
-│   ├── Orderbook.h          # Order book interface (bids, asks, order index)
-│   ├── Order.h              # Order struct (price, quantity, id, side)
-│   ├── Handle.h             # O(1) lookup handle (price, side, list iterator)
-│   ├── Types.h              # Type aliases (Price, Quantity, OrderId)
+│   ├── Orderbook.h          # Order book interface (symbol, bids, asks)
+│   ├── Order.h              # Order struct (price, quantity, id, side, stock locate)
+│   ├── Handle.h             # O(1) lookup handle (price, side, list iterator, stock locate)
+│   ├── Types.h              # Type aliases (Price, Quantity, OrderId, StockLocate)
 │   ├── Side.h               # Buy/Sell enum
 │   └── Print.h              # Debug output for price levels
 ├── src/
@@ -47,16 +47,20 @@ Sample data files are available from [Nasdaq's FTP server](https://emi.nasdaq.co
 
 | Type | Message               | Action                                      |
 |------|-----------------------|----------------------------------------------|
+| R    | Stock Directory       | Create order book for stock locate           |
 | A, F | Add Order             | Insert order at price level                  |
 | D    | Order Delete          | Remove order from book                       |
-| E    | Order Executed        | Reduce quantity; remove if fully filled       |
-| U    | Order Replace         | Delete original, add replacement order        |
+| E    | Order Executed        | Reduce quantity; remove if fully filled      |
+| C    | Executed with Price   | Reduce quantity; remove if fully filled      |
+| X    | Order Cancel          | Reduce quantity; remove if fully cancelled   |
+| U    | Order Replace         | Delete original, add replacement order       |
 
 ## Data Structures
 
+- **Order books**: `std::vector<Orderbook>` with 65536 slots — indexed by stock locate
 - **Bids**: `std::map<Price, PriceLevelOrders, std::greater<>>` — sorted descending
 - **Asks**: `std::map<Price, PriceLevelOrders, std::less<>>` — sorted ascending
-- **Order index**: `std::unordered_map<OrderId, Handle>` — O(1) lookup by order ID
+- **Order index**: `std::unordered_map<OrderId, Handle>` — shared across all books, O(1) lookup by order ID
 - **Price levels**: `std::list<Order>` — preserves FIFO queue priority
 
 ## Status
@@ -68,7 +72,8 @@ Work in progress. See [roadmap](#roadmap) for planned improvements.
 - [x] Naive limit order book with matching
 - [x] Passive ITCH operations (Add, Delete, Execute, Replace)
 - [x] ITCH 5.0 binary parser and framing loop
-- [ ] Cancel and Executed-with-Price message types
+- [x] Cancel and Executed-with-Price message types
+- [x] Per-stock order books via Stock Directory messages
 - [ ] Full integration test with Nasdaq sample data
 - [ ] Performance profiling and optimization
 - [ ] Benchmarks
