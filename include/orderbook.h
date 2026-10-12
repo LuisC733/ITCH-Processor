@@ -2,7 +2,6 @@
 #define ITCH_PROCESSOR_ORDERBOOK_H_
 #include <map>
 #include <string>
-#include <unordered_map>
 
 #include "handle.h"
 #include "order.h"
@@ -10,32 +9,31 @@
 
 class Orderbook {
  public:
-  std::string name_;
+  using Bids = std::map<Price, PriceLevel, std::greater<>>;
+  using Asks = std::map<Price, PriceLevel, std::less<>>;
 
   Orderbook() = default;
 
   explicit Orderbook(const std::string& name) : name_(name) {}
 
-  std::map<Price, PriceLevel, std::greater<>> bids_;
-  std::map<Price, PriceLevel, std::less<>> asks_;
+  PriceLevel::iterator AddOrder(const Order& order);
+  void DeleteOrder(const Handle& handle);
+  // Returns true if the order was fully consumed and removed from the book.
+  bool ReduceQuantity(const Handle& handle, Quantity quantity);
 
-  void AddOrder(const Order& order,
-                std::unordered_map<OrderId, Handle>& orders);
+  const std::string& name() const { return name_; }
+  const Bids& bids() const { return bids_; }
+  const Asks& asks() const { return asks_; }
+
+ private:
   template <typename T>
-  void HelperAddOrder(T& map, Order order,
-                      std::unordered_map<OrderId, Handle>& orders);
-  void DeleteOrder(std::unordered_map<OrderId, Handle>::iterator it,
-                   std::unordered_map<OrderId, Handle>& orders);
+  PriceLevel::iterator HelperAddOrder(T& map, const Order& order);
   template <typename T>
-  void HelperDeleteOrder(T& map,
-                         std::unordered_map<OrderId, Handle>::iterator it,
-                         std::unordered_map<OrderId, Handle>& orders);
-  void ReplaceOrder(const Order& order,
-                    std::unordered_map<OrderId, Handle>::iterator it,
-                    std::unordered_map<OrderId, Handle>& orders);
-  void OrderExecuted(std::unordered_map<OrderId, Handle>::iterator it,
-                     Quantity quantity,
-                     std::unordered_map<OrderId, Handle>& orders);
+  void HelperDeleteOrder(T& map, const Handle& handle);
+
+  std::string name_;
+  Bids bids_;
+  Asks asks_;
 };
 
 #endif  // ITCH_PROCESSOR_ORDERBOOK_H_

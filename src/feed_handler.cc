@@ -63,8 +63,7 @@ void FeedHandler::OnStockDirectory(const std::vector<uint8_t>& src,
 
 void FeedHandler::OnAddOrder(const std::vector<uint8_t>& src,
                              const size_t offset) {
-  const Order order = ParseAddOrder(src, offset);
-  books_[order.stock_locate].AddOrder(order, orders_);
+  InsertOrder(ParseAddOrder(src, offset));
 }
 
 void FeedHandler::OnDeleteOrder(const std::vector<uint8_t>& src,
@@ -73,8 +72,7 @@ void FeedHandler::OnDeleteOrder(const std::vector<uint8_t>& src,
   if (!found) {
     return;
   }
-  const auto it = *found;
-  books_[it->second.stock_locate].DeleteOrder(it, orders_);
+  RemoveOrder(*found);
 }
 
 void FeedHandler::OnOrderExecuted(const std::vector<uint8_t>& src,
@@ -84,8 +82,10 @@ void FeedHandler::OnOrderExecuted(const std::vector<uint8_t>& src,
     return;
   }
   const auto it = *found;
-  books_[it->second.stock_locate].OrderExecuted(
-      it, ParseOrderQuantity(src, offset), orders_);
+  if (books_[it->second.stock_locate].ReduceQuantity(
+          it->second, ParseOrderQuantity(src, offset))) {
+    orders_.erase(it);
+  }
 }
 
 void FeedHandler::OnReplaceOrder(const std::vector<uint8_t>& src,
@@ -94,14 +94,26 @@ void FeedHandler::OnReplaceOrder(const std::vector<uint8_t>& src,
   if (!found) {
     return;
   }
-  const auto it = *found;
   Order order = ParseReplaceOrder(src, offset);
-  order.side = it->second.side;
-  books_[it->second.stock_locate].ReplaceOrder(order, it, orders_);
+  order.side = (*found)->second.side;
+  RemoveOrder(*found);
+  InsertOrder(order);
 }
 
-std::optional<std::unordered_map<OrderId, Handle>::iterator>
-FeedHandler::FindOrder(const OrderId order_id) {
+void FeedHandler::InsertOrder(const Order& order) {
+  const PriceLevel::iterator location =
+      books_[order.stock_locate].AddOrder(order);
+  orders_.emplace(order.order_id, Handle{order.price, order.side, location,
+                                         order.stock_locate});
+}
+
+void FeedHandler::RemoveOrder(const OrderIndex::iterator it) {
+  books_[it->second.stock_locate].DeleteOrder(it->second);
+  orders_.erase(it);
+}
+
+std::optional<FeedHandler::OrderIndex::iterator> FeedHandler::FindOrder(
+    const OrderId order_id) {
   const auto it = orders_.find(order_id);
   if (it == orders_.end()) {
     std::cerr << "Error: Order not found, ID: " << order_id << std::endl;

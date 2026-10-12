@@ -8,63 +8,39 @@
 #include "side.h"
 #include "types.h"
 
-void Orderbook::AddOrder(const Order& order,
-                         std::unordered_map<OrderId, Handle>& orders) {
+PriceLevel::iterator Orderbook::AddOrder(const Order& order) {
   if (order.side == Side::kBuy) {
-    HelperAddOrder(bids_, order, orders);
-  } else {
-    HelperAddOrder(asks_, order, orders);
+    return HelperAddOrder(bids_, order);
   }
-};
-template <typename T>
-void Orderbook::HelperAddOrder(T& map, Order order,
-                               std::unordered_map<OrderId, Handle>& orders) {
-  Handle handle;
-
-  auto pair = map.insert(std::pair(order.price, PriceLevel{}));
-  auto it = pair.first;
-  auto location = it->second.insert(it->second.end(), order);
-
-  handle.price = order.price;
-  handle.side = order.side;
-  handle.location = location;
-  handle.stock_locate = order.stock_locate;
-  orders.insert(std::pair(order.order_id, handle));
+  return HelperAddOrder(asks_, order);
 }
-void Orderbook::DeleteOrder(
-    const std::unordered_map<OrderId, Handle>::iterator it,
-    std::unordered_map<OrderId, Handle>& orders) {
-  if (it->second.side == Side::kBuy) {
-    HelperDeleteOrder(bids_, it, orders);
-  } else {
-    HelperDeleteOrder(asks_, it, orders);
-  }
-};
 template <typename T>
-void Orderbook::HelperDeleteOrder(
-    T& map, const std::unordered_map<OrderId, Handle>::iterator it,
-    std::unordered_map<OrderId, Handle>& orders) {
-  auto const list = map.find(it->second.price);
+PriceLevel::iterator Orderbook::HelperAddOrder(T& map, const Order& order) {
+  PriceLevel& price_level = map[order.price];
+  return price_level.insert(price_level.end(), order);
+}
+void Orderbook::DeleteOrder(const Handle& handle) {
+  if (handle.side == Side::kBuy) {
+    HelperDeleteOrder(bids_, handle);
+  } else {
+    HelperDeleteOrder(asks_, handle);
+  }
+}
+template <typename T>
+void Orderbook::HelperDeleteOrder(T& map, const Handle& handle) {
+  auto const list = map.find(handle.price);
   PriceLevel& price_level = list->second;
-  price_level.erase(it->second.location);
+  price_level.erase(handle.location);
   if (price_level.empty()) {
     map.erase(list);
   }
-  orders.erase(it);
-};
+}
 
-void Orderbook::ReplaceOrder(
-    const Order& order, const std::unordered_map<OrderId, Handle>::iterator it,
-    std::unordered_map<OrderId, Handle>& orders) {
-  DeleteOrder(it, orders);
-  AddOrder(order, orders);
-};
-void Orderbook::OrderExecuted(
-    const std::unordered_map<OrderId, Handle>::iterator it,
-    const Quantity quantity, std::unordered_map<OrderId, Handle>& orders) {
-  const auto order = it->second.location;
-  order->quantity = order->quantity - quantity;
-  if (order->quantity == 0) {
-    DeleteOrder(it, orders);
-  };
+bool Orderbook::ReduceQuantity(const Handle& handle, const Quantity quantity) {
+  handle.location->quantity -= quantity;
+  if (handle.location->quantity != 0) {
+    return false;
+  }
+  DeleteOrder(handle);
+  return true;
 }

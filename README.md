@@ -28,8 +28,9 @@ Sample data files are available from [Nasdaq's FTP server](https://emi.nasdaq.co
 ## Project Structure
 
 ```
-├── main.cc                  # Framing loop, message dispatch, per-stock routing
+├── main.cc                  # Entry point: loads the file and runs the feed handler
 ├── include/
+│   ├── feed_handler.h       # Feed handler interface (owns order books and order index)
 │   ├── parser.h             # Binary field extraction with endianness conversion
 │   ├── reader.h             # File-to-buffer loader (binary mode)
 │   ├── orderbook.h          # Order book interface (symbol, bids, asks)
@@ -39,7 +40,8 @@ Sample data files are available from [Nasdaq's FTP server](https://emi.nasdaq.co
 │   ├── side.h               # Buy/Sell enum
 │   └── print.h              # Debug output for price levels
 ├── src/
-│   └── orderbook.cc         # Order book operations (add, delete, execute, replace)
+│   ├── feed_handler.cc      # Framing loop, message dispatch, per-stock routing
+│   └── orderbook.cc         # Order book operations (add, delete, reduce quantity)
 └── CMakeLists.txt
 ```
 
