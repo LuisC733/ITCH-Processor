@@ -16,7 +16,7 @@ static_assert(std::endian::native == std::endian::little,
 
 // Reads a big-endian unsigned integer from an unaligned position.
 template <typename T>
-inline T ReadBigEndian(const uint8_t* p) {
+T ReadBigEndian(const uint8_t* p) {
   static_assert(std::is_unsigned_v<T>);
   static_assert(sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8);
   T value;
@@ -40,6 +40,10 @@ inline Order ParseAddOrder(const uint8_t* msg) {
   order.quantity = ReadBigEndian<Quantity>(msg + 20);
   order.price = ReadBigEndian<Price>(msg + 32);
   return order;
+}
+
+inline StockLocate ParseStockLocate(const uint8_t* msg) {
+  return ReadBigEndian<StockLocate>(msg + 1);
 }
 
 inline OrderId ParseOrderId(const uint8_t* msg) {

@@ -15,6 +15,23 @@ cmake -B build
 cmake --build build
 ```
 
+Without an explicit build type this configures a Release build. For a Debug build, where order book invariants (book not crossed, no negative quantities, order index consistent with the books) are checked and abort on violation:
+
+```
+cmake -B build-debug -DCMAKE_BUILD_TYPE=Debug
+cmake --build build-debug
+```
+
+## Testing
+
+Unit tests use GoogleTest, which CMake fetches on first configure. Pass `-DITCH_BUILD_TESTS=OFF` to skip them.
+
+```
+ctest --test-dir build-debug --output-on-failure
+```
+
+Death tests for the invariant checks only expect an abort in Debug builds.
+
 ## Usage
 
 Place a Nasdaq BinaryFILE (ITCH 5.0) at `assets/20200130.BX_ITCH_50` (path is currently hardcoded in `main.cc`) and run:
@@ -31,6 +48,7 @@ Sample data files are available from [Nasdaq's FTP server](https://emi.nasdaq.co
 ├── main.cc                        # Entry point: loads the file and runs the feed handler
 ├── src/
 │   ├── common/
+│   │   ├── check.h                # Debug-only invariant checks (ITCH_DCHECK)
 │   │   ├── types.h                # Type aliases (Price, Quantity, OrderId, StockLocate)
 │   │   └── side.h                 # Buy/Sell enum
 │   ├── feed_handler/
@@ -46,6 +64,12 @@ Sample data files are available from [Nasdaq's FTP server](https://emi.nasdaq.co
 │   │   └── parser.h               # ITCH message decoding with endianness conversion
 │   └── reader/
 │       └── reader.h               # File-to-buffer loader (binary mode)
+├── test/
+│   ├── itch_builder.h             # Encodes ITCH messages and framed feeds for tests
+│   ├── book_util.h                # Depth and queue views for assertions
+│   ├── parser_test.cc             # Parser against hand-written spec bytes
+│   ├── orderbook_test.cc          # Price/time priority, level cleanup, invariants
+│   └── feed_handler_test.cc       # Message routing, order index, framing
 └── CMakeLists.txt
 ```
 

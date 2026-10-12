@@ -16,6 +16,7 @@ class FeedHandler {
 
   void Process(const std::vector<uint8_t>& src);
   const Orderbook& book(StockLocate stock_locate) const;
+  void CheckInvariants() const;
 
  private:
   using OrderIndex = std::unordered_map<OrderId, Handle>;
@@ -28,7 +29,7 @@ class FeedHandler {
   void OnReplaceOrder(const uint8_t* msg);
   void InsertOrder(const Order& order);
   void RemoveOrder(OrderIndex::iterator it);
-  std::optional<OrderIndex::iterator> FindOrder(OrderId order_id);
+  std::optional<OrderIndex::iterator> FindOrder(const uint8_t* msg);
 
   static constexpr int kMaxLocate = 65536;
   std::vector<Orderbook> books_;

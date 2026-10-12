@@ -18,8 +18,8 @@ class Orderbook {
 
   PriceLevel::iterator AddOrder(const Order& order);
   void DeleteOrder(const Handle& handle);
-  // Returns true if the order was fully consumed and removed from the book.
   bool ReduceQuantity(const Handle& handle, Quantity quantity);
+  void CheckInvariants() const;
 
   const std::string& name() const { return name_; }
   const Bids& bids() const { return bids_; }
@@ -30,6 +30,7 @@ class Orderbook {
   PriceLevel::iterator HelperAddOrder(T& map, const Order& order);
   template <typename T>
   void HelperDeleteOrder(T& map, const Handle& handle);
+  void CheckNotCrossed() const;
 
   std::string name_;
   Bids bids_;
