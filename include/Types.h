@@ -3,7 +3,8 @@
 #include <cstdint>
 #include <list>
 
-class Order;
+struct Order;
+using StockLocate = std::uint16_t;
 using Price = std::uint32_t;
 using Quantity = std::uint32_t;
 using OrderId = std::uint64_t;

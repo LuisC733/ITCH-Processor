@@ -1,6 +1,8 @@
 #ifndef ITCH_PROCESSOR_PARSER_H
 #define ITCH_PROCESSOR_PARSER_H
 #include <vector>
+#include <utility>
+#include <cstring>
 #include "Order.h"
 #include "Orderbook.h"
 
@@ -9,7 +11,10 @@ inline Order parseAddOrder(const std::vector<uint8_t> &src, const size_t offset)
     OrderId orderId;
     Quantity quantity;
     Price price;
+    StockLocate stockLocate;
 
+    memcpy(&stockLocate, src.data() + offset + 1, sizeof(stockLocate));
+    order.stockLocate  = __builtin_bswap16(stockLocate);
     memcpy(&orderId, src.data() + offset + 11, sizeof(orderId));
     order.orderId  = __builtin_bswap64(orderId);
     if (src[offset + 19] == 'B') {order.side = Side::Buy;}
@@ -38,7 +43,10 @@ inline Order parseReplaceOrder(const std::vector<uint8_t> &src, const size_t off
     OrderId orderId;
     Quantity quantity;
     Price price;
+    StockLocate stockLocate;
 
+    memcpy(&stockLocate, src.data() + offset + 1, sizeof(stockLocate));
+    order.stockLocate = __builtin_bswap16(stockLocate);
     memcpy(&orderId, src.data() + offset + 19, sizeof(orderId));
     order.orderId  = __builtin_bswap64(orderId);
     memcpy(&quantity, src.data() + offset + 27, sizeof(quantity));
@@ -47,6 +55,18 @@ inline Order parseReplaceOrder(const std::vector<uint8_t> &src, const size_t off
     order.price = __builtin_bswap32(price);
 
     return order;
+};
+
+inline std::pair<StockLocate, std::string> parseStockDirectory(const std::vector<uint8_t> &src, const size_t offset) {
+    StockLocate stockLocate;
+
+    memcpy(&stockLocate, src.data() + offset + 1, sizeof(stockLocate));
+    stockLocate = __builtin_bswap16(stockLocate);
+    std::string stockName(src.data() + offset + 11, src.data() + offset + 19);
+    stockName.erase(stockName.find_last_not_of(' ') + 1);
+
+    auto pair = std::make_pair(stockLocate, stockName);
+    return pair;
 };
 
 #endif //ITCH_PROCESSOR_PARSER_H

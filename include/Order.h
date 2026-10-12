@@ -9,6 +9,7 @@ struct Order {
     Quantity quantity;
     OrderId orderId;
     Side side;
+    StockLocate stockLocate;
 };
 
 #endif //ORDERBOOK_ORDER_H
