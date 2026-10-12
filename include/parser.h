@@ -1,81 +1,70 @@
 #ifndef ITCH_PROCESSOR_PARSER_H_
 #define ITCH_PROCESSOR_PARSER_H_
+#include <bit>
+#include <cstdint>
 #include <cstring>
+#include <string>
+#include <type_traits>
 #include <utility>
-#include <vector>
 
 #include "order.h"
-#include "orderbook.h"
+#include "side.h"
+#include "types.h"
 
-inline Order ParseAddOrder(const std::vector<uint8_t>& src,
-                           const size_t offset) {
-  Order order{};
-  OrderId order_id;
-  Quantity quantity;
-  Price price;
-  StockLocate stock_locate;
+static_assert(std::endian::native == std::endian::little,
+              "ReadBigEndian assumes a little-endian host");
 
-  memcpy(&stock_locate, src.data() + offset + 1, sizeof(stock_locate));
-  order.stock_locate = __builtin_bswap16(stock_locate);
-  memcpy(&order_id, src.data() + offset + 11, sizeof(order_id));
-  order.order_id = __builtin_bswap64(order_id);
-  if (src[offset + 19] == 'B') {
-    order.side = Side::kBuy;
+// Reads a big-endian unsigned integer from an unaligned position.
+template <typename T>
+inline T ReadBigEndian(const uint8_t* p) {
+  static_assert(std::is_unsigned_v<T>);
+  static_assert(sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8);
+  T value;
+  memcpy(&value, p, sizeof(value));
+  if constexpr (sizeof(T) == 2) {
+    return __builtin_bswap16(value);
+  } else if constexpr (sizeof(T) == 4) {
+    return __builtin_bswap32(value);
   } else {
-    order.side = Side::kSell;
+    return __builtin_bswap64(value);
   }
-  memcpy(&quantity, src.data() + offset + 20, sizeof(quantity));
-  order.quantity = __builtin_bswap32(quantity);
-  memcpy(&price, src.data() + offset + 32, sizeof(price));
-  order.price = __builtin_bswap32(price);
-
-  return order;
-};
-inline OrderId ParseOrderId(const std::vector<uint8_t>& src,
-                            const size_t offset) {
-  OrderId order_id;
-  memcpy(&order_id, src.data() + offset + 11, sizeof(order_id));
-  return __builtin_bswap64(order_id);
-};
-
-inline Quantity ParseOrderQuantity(const std::vector<uint8_t>& src,
-                                   const size_t offset) {
-  Quantity quantity;
-  memcpy(&quantity, src.data() + offset + 19, sizeof(quantity));
-  return __builtin_bswap32(quantity);
 }
 
-inline Order ParseReplaceOrder(const std::vector<uint8_t>& src,
-                               const size_t offset) {
+// All parsers take a pointer to the message type byte.
+
+inline Order ParseAddOrder(const uint8_t* msg) {
   Order order{};
-  OrderId order_id;
-  Quantity quantity;
-  Price price;
-  StockLocate stock_locate;
-
-  memcpy(&stock_locate, src.data() + offset + 1, sizeof(stock_locate));
-  order.stock_locate = __builtin_bswap16(stock_locate);
-  memcpy(&order_id, src.data() + offset + 19, sizeof(order_id));
-  order.order_id = __builtin_bswap64(order_id);
-  memcpy(&quantity, src.data() + offset + 27, sizeof(quantity));
-  order.quantity = __builtin_bswap32(quantity);
-  memcpy(&price, src.data() + offset + 31, sizeof(price));
-  order.price = __builtin_bswap32(price);
-
+  order.stock_locate = ReadBigEndian<StockLocate>(msg + 1);
+  order.order_id = ReadBigEndian<OrderId>(msg + 11);
+  order.side = msg[19] == 'B' ? Side::kBuy : Side::kSell;
+  order.quantity = ReadBigEndian<Quantity>(msg + 20);
+  order.price = ReadBigEndian<Price>(msg + 32);
   return order;
-};
+}
+
+inline OrderId ParseOrderId(const uint8_t* msg) {
+  return ReadBigEndian<OrderId>(msg + 11);
+}
+
+inline Quantity ParseOrderQuantity(const uint8_t* msg) {
+  return ReadBigEndian<Quantity>(msg + 19);
+}
+
+inline Order ParseReplaceOrder(const uint8_t* msg) {
+  Order order{};
+  order.stock_locate = ReadBigEndian<StockLocate>(msg + 1);
+  order.order_id = ReadBigEndian<OrderId>(msg + 19);
+  order.quantity = ReadBigEndian<Quantity>(msg + 27);
+  order.price = ReadBigEndian<Price>(msg + 31);
+  return order;
+}
 
 inline std::pair<StockLocate, std::string> ParseStockDirectory(
-    const std::vector<uint8_t>& src, const size_t offset) {
-  StockLocate stock_locate;
-
-  memcpy(&stock_locate, src.data() + offset + 1, sizeof(stock_locate));
-  stock_locate = __builtin_bswap16(stock_locate);
-  std::string stock_name(src.data() + offset + 11, src.data() + offset + 19);
+    const uint8_t* msg) {
+  const StockLocate stock_locate = ReadBigEndian<StockLocate>(msg + 1);
+  std::string stock_name(msg + 11, msg + 19);
   stock_name.erase(stock_name.find_last_not_of(' ') + 1);
-
-  auto pair = std::make_pair(stock_locate, stock_name);
-  return pair;
-};
+  return {stock_locate, stock_name};
+}
 
 #endif  // ITCH_PROCESSOR_PARSER_H_

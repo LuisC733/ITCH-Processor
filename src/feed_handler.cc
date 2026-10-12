@@ -1,6 +1,5 @@
 #include "feed_handler.h"
 
-#include <cstring>
 #include <iostream>
 
 #include "order.h"
@@ -11,16 +10,14 @@ FeedHandler::FeedHandler() : books_(kMaxLocate) {}
 void FeedHandler::Process(const std::vector<uint8_t>& src) {
   size_t offset = 0;
   while (offset + 2 <= src.size()) {
-    uint16_t dest = {};
-    memcpy(&dest, src.data() + offset, sizeof(dest));
-    const uint16_t length = __builtin_bswap16(dest);
+    const uint16_t length = ReadBigEndian<uint16_t>(src.data() + offset);
     offset += 2;
     if (length == 0 || offset + length > src.size()) {
       std::cerr << "Error: Truncated message at offset: " << offset
                 << std::endl;
       break;
     }
-    ProcessMessage(src, offset);
+    ProcessMessage(src.data() + offset);
     offset += length;
   }
 }
@@ -29,72 +26,66 @@ const Orderbook& FeedHandler::book(const StockLocate stock_locate) const {
   return books_[stock_locate];
 }
 
-void FeedHandler::ProcessMessage(const std::vector<uint8_t>& src,
-                                 const size_t offset) {
-  switch (src[offset]) {
+void FeedHandler::ProcessMessage(const uint8_t* msg) {
+  switch (msg[0]) {
     case 'R':
-      OnStockDirectory(src, offset);
+      OnStockDirectory(msg);
       break;
     case 'A':
     case 'F':
-      OnAddOrder(src, offset);
+      OnAddOrder(msg);
       break;
     case 'D':
-      OnDeleteOrder(src, offset);
+      OnDeleteOrder(msg);
       break;
     case 'E':
     case 'C':
     case 'X':
-      OnOrderExecuted(src, offset);
+      OnOrderExecuted(msg);
       break;
     case 'U':
-      OnReplaceOrder(src, offset);
+      OnReplaceOrder(msg);
       break;
     default:
       break;
   }
 }
 
-void FeedHandler::OnStockDirectory(const std::vector<uint8_t>& src,
-                                   const size_t offset) {
-  const auto [stock_locate, name] = ParseStockDirectory(src, offset);
+void FeedHandler::OnStockDirectory(const uint8_t* msg) {
+  const auto [stock_locate, name] = ParseStockDirectory(msg);
   books_[stock_locate] = Orderbook{name};
 }
 
-void FeedHandler::OnAddOrder(const std::vector<uint8_t>& src,
-                             const size_t offset) {
-  InsertOrder(ParseAddOrder(src, offset));
+void FeedHandler::OnAddOrder(const uint8_t* msg) {
+  InsertOrder(ParseAddOrder(msg));
 }
 
-void FeedHandler::OnDeleteOrder(const std::vector<uint8_t>& src,
-                                const size_t offset) {
-  const auto found = FindOrder(ParseOrderId(src, offset));
+void FeedHandler::OnDeleteOrder(const uint8_t* msg) {
+  const auto found = FindOrder(ParseOrderId(msg));
   if (!found) {
     return;
   }
   RemoveOrder(*found);
 }
 
-void FeedHandler::OnOrderExecuted(const std::vector<uint8_t>& src,
-                                  const size_t offset) {
-  const auto found = FindOrder(ParseOrderId(src, offset));
+void FeedHandler::OnOrderExecuted(const uint8_t* msg) {
+  const auto found = FindOrder(ParseOrderId(msg));
   if (!found) {
     return;
   }
   const auto it = *found;
-  if (books_[it->second.stock_locate].ReduceQuantity(
-          it->second, ParseOrderQuantity(src, offset))) {
+  if (books_[it->second.stock_locate].ReduceQuantity(it->second,
+                                                     ParseOrderQuantity(msg))) {
     orders_.erase(it);
   }
 }
 
-void FeedHandler::OnReplaceOrder(const std::vector<uint8_t>& src,
-                                 const size_t offset) {
-  const auto found = FindOrder(ParseOrderId(src, offset));
+void FeedHandler::OnReplaceOrder(const uint8_t* msg) {
+  const auto found = FindOrder(ParseOrderId(msg));
   if (!found) {
     return;
   }
-  Order order = ParseReplaceOrder(src, offset);
+  Order order = ParseReplaceOrder(msg);
   order.side = (*found)->second.side;
   RemoveOrder(*found);
   InsertOrder(order);

@@ -1,6 +1,5 @@
 #ifndef ITCH_PROCESSOR_FEED_HANDLER_H_
 #define ITCH_PROCESSOR_FEED_HANDLER_H_
-#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <unordered_map>
@@ -21,12 +20,12 @@ class FeedHandler {
  private:
   using OrderIndex = std::unordered_map<OrderId, Handle>;
 
-  void ProcessMessage(const std::vector<uint8_t>& src, size_t offset);
-  void OnStockDirectory(const std::vector<uint8_t>& src, size_t offset);
-  void OnAddOrder(const std::vector<uint8_t>& src, size_t offset);
-  void OnDeleteOrder(const std::vector<uint8_t>& src, size_t offset);
-  void OnOrderExecuted(const std::vector<uint8_t>& src, size_t offset);
-  void OnReplaceOrder(const std::vector<uint8_t>& src, size_t offset);
+  void ProcessMessage(const uint8_t* msg);
+  void OnStockDirectory(const uint8_t* msg);
+  void OnAddOrder(const uint8_t* msg);
+  void OnDeleteOrder(const uint8_t* msg);
+  void OnOrderExecuted(const uint8_t* msg);
+  void OnReplaceOrder(const uint8_t* msg);
   void InsertOrder(const Order& order);
   void RemoveOrder(OrderIndex::iterator it);
   std::optional<OrderIndex::iterator> FindOrder(OrderId order_id);
