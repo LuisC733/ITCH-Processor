@@ -2,6 +2,8 @@
 
 A C++ ITCH 5.0 feed handler that reconstructs per-stock limit order books from raw Nasdaq BinaryFILE data.
 
+[![CI](https://github.com/LuisC733/Order-Book/actions/workflows/ci.yml/badge.svg)](https://github.com/LuisC733/Order-Book/actions/workflows/ci.yml)
+
 ## Overview
 
 Parses binary ITCH 5.0 messages from Nasdaq historical data files and maintains one live order book per stock. Books are created from Stock Directory messages and indexed by stock locate. Each book tracks price levels with sorted bids and asks; a shared order index provides O(1) lookup via handles and routes Delete, Execute, Cancel, and Replace messages to the right book.
