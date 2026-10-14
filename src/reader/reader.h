@@ -1,5 +1,7 @@
 #ifndef ITCH_PROCESSOR_READER_READER_H_
 #define ITCH_PROCESSOR_READER_READER_H_
+#include <cstddef>
+#include <cstdint>
 #include <fstream>
 #include <stdexcept>
 #include <vector>

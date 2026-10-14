@@ -1,6 +1,7 @@
 #ifndef ITCH_PROCESSOR_BENCH_BENCH_UTIL_H_
 #define ITCH_PROCESSOR_BENCH_BENCH_UTIL_H_
 #include <cstddef>
+#include <cstdint>
 
 #include <benchmark/benchmark.h>
 
