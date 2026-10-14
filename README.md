@@ -160,6 +160,6 @@ Work in progress. See [roadmap](#roadmap) for planned improvements.
 - [x] Per-stock order books via Stock Directory messages
 - [x] Full integration test with Nasdaq sample data
 - [x] Benchmarks of the naive version
+- [x] CI pipeline
 - [ ] Performance profiling and optimization
 - [ ] Benchmarks after optimization
-- [ ] CI pipeline
